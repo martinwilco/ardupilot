@@ -329,6 +329,7 @@ public:
 
         // Parameters
         AP_Int16 _required_count;
+        uint16_t _real_required_count;
         AP_Int8 _sensor_mask;
         AP_Int8 _batch_options_mask;
 
@@ -723,7 +724,7 @@ public:
     // instance number for logging
 #if INS_AUX_INSTANCES
     uint8_t tcal_instance(const AP_InertialSensor_TCal &tc) const {
-        for (uint8_t i=0; i<INS_MAX_INSTANCES; i++) {
+        for (uint8_t i=0; i<INS_MAX_INSTANCES - INS_AUX_INSTANCES; i++) {
             if (&tc == &tcal_old_param[i]) {
                 return i;
             }
