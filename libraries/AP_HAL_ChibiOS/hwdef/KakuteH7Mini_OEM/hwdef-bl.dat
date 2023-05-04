@@ -1,0 +1,4 @@
+include ../KakuteH7Mini/hwdef-bl.dat
+
+# Add CS pins to ensure they are high in bootloader
+PA15 SDCARD_CS CS

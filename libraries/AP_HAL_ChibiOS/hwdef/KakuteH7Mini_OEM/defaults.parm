@@ -1,0 +1,3 @@
+include ../KakuteH7Mini/defaults.parm
+
+SCR_ENABLE 1
