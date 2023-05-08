@@ -1,3 +1,8 @@
 include ../KakuteH7Mini/defaults.parm
 
+# Scripting enabled at startup
 SCR_ENABLE 1
+
+# HMP sensor serial port 4 for logging
+SERIAL4_PROTOCOL 28
+SERIAL4_BAUD 19
