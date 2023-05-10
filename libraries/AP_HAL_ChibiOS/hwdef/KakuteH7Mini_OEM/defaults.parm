@@ -6,3 +6,18 @@ SCR_ENABLE 1
 # HMP sensor serial port 4 for logging
 SERIAL4_PROTOCOL 28
 SERIAL4_BAUD 19
+
+# Auto-enable BLHeli pass-thru support for all multicopter motors
+SERVO_BLH_AUTO 1
+
+# Activate FPORT for RC
+SERIAL6_OPTIONS 7
+
+# Enable TSYS01 with logging
+TEMP1_TYPE 1
+TEMP1_BUS 0
+TEMP1_ADDR 119
+TEMP_LOG 1
+
+# Logging when disarmed
+LOG_DISARMED 1
