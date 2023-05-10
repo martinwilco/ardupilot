@@ -25,7 +25,21 @@ local function data(addr)
   local data_m = sensor:read_registers(addr + 2)
   local data_l = sensor:read_registers(addr + 3)
   if data_h and data_m and data_l then
-    return data_l << 16 | data_m << 8 | data_h << 0
+    return data_l << 16 | data_m << 8 | data_h
+  end
+end
+
+local function getcap(addr)
+  local count = data(addr)
+  if count then
+    return count / 1000.0
+  end
+end
+
+local function getvt(addr)
+  local measure = data(addr)
+  if measure then
+    return (measure / 2048) - 4096
   end
 end
 
@@ -43,15 +57,21 @@ local function measure(addr)
   end
 end
 
+-- initialize cdc
+sensor:write_register(CDC_CAP_SETUP, 0x80)
+sensor:write_register(CDC_VT_SETUP, 0x80)
+sensor:write_register(CDC_EXC_SETUP, 0x1B)
+sensor:write_register(CDC_CONFIG, 0x01)
+sensor:write_register(CDC_CAP_DAC_A, 200)
+sensor:write_register(CDC_CAP_DAC_B, 0x00)
+
 function update()
   -- check, whether CDC is connected and if so, read status
   if sensor:read_registers(0) then
     -- gcs:send_text(6, "CDC: found at 0x48")
-    local status = sensor:read_registers(CDC_STATUS)
+    status = sensor:read_registers(CDC_STATUS)
     -- gcs:send_text(6,"CDC: status "..tostring(status))
-    if status == 7 then
-      -- gcs:send_text(6, "CDC: status normal")
-    elseif not status then
+    if not status then
       gcs:send_text(3, "CDC: failed to read status")
       return update, 10000
     end
@@ -60,85 +80,64 @@ function update()
     return update, 10000
   end
 
-  if not status then
-  else
-
-  end
-  --[[
   -- status register bit map
-  local EXCERR =  (status >> 3) & 1
-  local RDY =  (status >> 2) & 1
+  local EXCERR = (status >> 3) & 1
+  local RDY = (status >> 2) & 1
   local RDYVT = (status >> 1) & 1
   local RDYCAP = (status >> 0) & 1
 
   -- report excitation output errors
-  if EXCERR ~= 0 then
+  if EXCERR == 1 then
     gcs:send_text(3, "CDC: excitation output cannot be driven properly")
     return update, 10000
   end
 
   -- report capacitive and voltage/temperature conversion status
-  if RDY ~=1 then
-    gcs:send_text(6, "CDC: conversion cap & vt finished")
+  if RDY == 1 then
+    gcs:send_text(3, "CDC: cap and vt conversion not finished")
     return update, 10000
   end
 
   -- report voltage/temperature conversion status
-  if RDYVT ~=1 then
-    gcs:send_text(6, "CDC: conversion vt finished")
-    return update, 10000
+  if RDYVT == 1 then
+    gcs:send_text(3, "CDC: vt conversion not finished")
+  else
+    local vt_data = data(CDC_VT_DATA)
+    if vt_data then
+      -- gcs:send_text(6, "CDC: vt data " .. tostring(vt_data))
+    else
+      gcs:send_text(1, "CDC: failed to read vt data")
+      return update, 10000
+    end
+    temp = getvt(CDC_VT_DATA)
+    gcs:send_text(6, string.format("CDC: temperature %.1f °C", temp))
+    gcs:send_named_float('Temp. (°C)', temp)
+    if not temp then
+      gcs:send_text(1, "CDC: failed to read vt data")
+    end
   end
 
   -- report capacitive conversion status
-  if RDYCAP ~=1 then
-    gcs:send_text(6, "CDC: conversion cap finished")
-    return update, 10000
-  end
- ]]
-  -- initialize cdc
-  sensor:write_register(CDC_CAP_SETUP, 0x80)
-  sensor:write_register(CDC_VT_SETUP, 0x80)
-  sensor:write_register(CDC_EXC_SETUP, 0x1B)
-  sensor:write_register(CDC_CONFIG, 0x01)
-  sensor:write_register(CDC_CAP_DAC_A, 200)
-  sensor:write_register(CDC_CAP_DAC_B, 0x00)
-
-  -- multibyte write
-  --[[   local init = {0x80, 0x80, 0x1B, 0x01, 200, 0x00}
-  sensor:write_register(CDC_CAP_SETUP, init)
- ]]
-  --[[   gcs:send_text(6,"CDC: cap setup status "..tostring(sensor:read_registers(CDC_CAP_SETUP)))
-  gcs:send_text(6,"CDC: vt setup status "..tostring(sensor:read_registers(CDC_VT_SETUP)))
-  gcs:send_text(6,"CDC: exc setup status "..tostring(sensor:read_registers(CDC_EXC_SETUP)))
-  gcs:send_text(6,"CDC: config status "..tostring(sensor:read_registers(CDC_CONFIG)))
-  gcs:send_text(6,"CDC: cap dac a status "..tostring(sensor:read_registers(CDC_CAP_DAC_A)))
-  gcs:send_text(6,"CDC: cap dac b status "..tostring(sensor:read_registers(CDC_CAP_DAC_B)))
- ]]
-  local status = sensor:read_registers(CDC_STATUS)
-  if status then
-    gcs:send_text(6, "CDC: status " .. tostring(status))
+  if RDYCAP == 1 then
+    gcs:send_text(3, "CDC: cap conversion not finished")
   else
-    gcs:send_text(1, "CDC: failed to read status")
-    return update, 10000
+    local cap_data = data(CDC_CAP_DATA)
+    if cap_data then
+      -- gcs:send_text(6, "CDC: cap data " .. tostring(cap_data))
+    else
+      gcs:send_text(1, "CDC: failed to read cap data")
+      return update, 10000
+    end
+
+    local cap = getcap(CDC_CAP_DATA)
+    if not cap then
+      gcs:send_text(1, "CDC: failed to read cap data")
+    end
   end
 
-  local cap_data = data(CDC_CAP_DATA)
-  if cap_data then
-    gcs:send_text(6, "CDC: cap data " .. tostring(cap_data))
-  else
-    gcs:send_text(1, "CDC: failed to read cap data")
-    return update, 10000
-  end
+  logger:write('CDC', 'Temperature', 'f', 'O', '-', temp)
 
-  local vt_data = data(CDC_VT_DATA)
-  if vt_data then
-    gcs:send_text(6, "CDC: vt data " .. tostring(vt_data))
-  else
-    gcs:send_text(1, "CDC: failed to read vt data")
-    return update, 10000
-  end
-
---[[   local data = measure(CDC_STATUS)
+  --[[   local data = measure(CDC_STATUS)
   if data then
     gcs:send_text(6, "CDC: data " .. tostring(data))
   else
@@ -146,7 +145,7 @@ function update()
     return update, 10000
   end
  ]]
-  return update, 10000
+  return update, 500
 end
 
 return update()
