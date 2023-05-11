@@ -23,12 +23,12 @@ function decode_and_write_to_flash(fullmessage)
   end
   if count == 3 then
     -- nur wegschreiben, wenn alles da ist. und auch nicht zuviel.
-    logger.write('HMP', 'Temperature,Humidity,Dewpoint', 'fff', 'O--', '---', table.unpack(log_data))
+    logger.write('HMP', 'Temperature,Humidity,Dewpoint', 'fff', 'O-O', '---', table.unpack(log_data))
     msg_count = msg_count + 1
     if msg_count == nth_msg2display then
       gcs:send_text(5, string.format("HMP %.1f °C @ %.0f pcRH", log_data[1], log_data[2]))
-      gcs:send_named_float('Temperature (°C)', log_data[1])
-      gcs:send_named_float('Humidity (% RH)', log_data[2])
+      gcs:send_named_float('HMP (°C)', log_data[1])
+      gcs:send_named_float('HMP (% RH)', log_data[2])
       msg_count = 0
     end
   else
