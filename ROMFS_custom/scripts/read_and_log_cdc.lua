@@ -21,18 +21,19 @@ sensor:set_retries(10)
 
 -- reads three consecutive bytes from a given location
 local function data(addr)
-  local data_h = sensor:read_registers(addr + 1)
-  local data_m = sensor:read_registers(addr + 2)
-  local data_l = sensor:read_registers(addr + 3)
+  local data_h = sensor:read_registers(addr + 0)
+  local data_m = sensor:read_registers(addr + 1)
+  local data_l = sensor:read_registers(addr + 2)
   if data_h and data_m and data_l then
-    return data_l << 16 | data_m << 8 | data_h
+    return data_h << 16 | data_m << 8 | data_l
   end
 end
 
 local function getcap(addr)
   local cap = data(addr)
+  -- gcs:send_text(6, "CDC: capacitance "..tostring(cap))
   if cap then
-    return cap
+    return cap/42279.1-151.5-106
   end
 end
 
@@ -62,7 +63,7 @@ function update()
       return update, 10000
     end
   else
-    gcs:send_text(3, "CDC: not connected")
+    gcs:send_text(3, "CDC: not connected or no power")
     return update, 10000
   end
 
@@ -78,10 +79,10 @@ function update()
     return update, 10000
   end
 
-  if RDY == 0 then -- report capacity and voltage/temperature conversion status
+  if RDY == 0 then -- report capacitance and voltage/temperature conversion status
+    local hum = getcap(CDC_CAP_DATA)
     local temp = getvt(CDC_VT_DATA)
     gcs:send_named_float('CDC (°C)', temp)
-    local hum = getcap(CDC_CAP_DATA)
     gcs:send_named_float('CDC (% RH)', hum)
     if temp and hum then
       logger:write('CDC', 'Humidity,Temperature', 'ff', '-O', '--', hum, temp)
@@ -97,7 +98,7 @@ function update()
     else
       gcs:send_text(1, "CDC: failed to read vt data")
     end
-  elseif RDY ~= 0 and RDYVT ~= 0 and RDYCAP == 0 then -- report capacity conversion status
+  elseif RDY ~= 0 and RDYVT ~= 0 and RDYCAP == 0 then -- report capacitance conversion status
     local hum = getcap(CDC_CAP_DATA)
     gcs:send_named_float('CDC (% RH)', hum)
     if hum then
@@ -111,7 +112,7 @@ function update()
     return update()
   end
 
-  return update, 500
+  return update, 10
 end
 
 return update()
