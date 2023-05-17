@@ -1,5 +1,5 @@
 --[[
-    This script reads a CDC connected to a P14 humidity sensor on I²C,
+    This script reads a P14 Rapid humidity sensor on I²C,
     reading will be saved to data flash logs and streamed to gcs.
 ]]
 --
@@ -33,7 +33,7 @@ local function getcap(addr)
   local cap = data(addr)
   -- gcs:send_text(6, "CDC: capacitance "..tostring(cap))
   if cap then
-    return cap/42279.1-151.5-106
+    return cap / 42279.1 - 151.5 - 106
   end
 end
 
@@ -67,6 +67,11 @@ function update()
     return update, 10000
   end
 
+  local tsys01_temp = battery:get_temperature(0)
+  if tsys01_temp then
+    gcs:send_named_float('TSYS (°C)', tsys01_temp)
+  end
+
   -- status register bit map
   local EXCERR = (status >> 3) & 1
   local RDY = (status >> 2) & 1
@@ -82,32 +87,13 @@ function update()
   if RDY == 0 then -- report capacitance and voltage/temperature conversion status
     local hum = getcap(CDC_CAP_DATA)
     local temp = getvt(CDC_VT_DATA)
-    gcs:send_named_float('CDC (°C)', temp)
-    gcs:send_named_float('CDC (% RH)', hum)
+    gcs:send_named_float('P14 (°C)', temp)
+    gcs:send_named_float('P14 (% RH)', hum)
     if temp and hum then
-      logger:write('CDC', 'Humidity,Temperature', 'ff', '-O', '--', hum, temp)
+      logger:write('P14', 'Humidity,Temperature', 'ff', '-O', '--', hum, temp)
     else
       gcs:send_text(1, "CDC: failed to read data")
     end
-    --[[   elseif RDY ~= 0 and RDYVT == 0 then -- report voltage/temperature conversion status
-    local temp = getvt(CDC_VT_DATA)
-    gcs:send_named_float('CDC (°C)', temp)
-    if temp then
-      logger:write('CDC', 'Temperature', 'f', 'O', '-', temp)
-      gcs:send_text(1, "CDC: temp logged")
-    else
-      gcs:send_text(1, "CDC: failed to read vt data")
-    end
-  elseif RDY ~= 0 and RDYVT ~= 0 and RDYCAP == 0 then -- report capacitance conversion status
-    local hum = getcap(CDC_CAP_DATA)
-    gcs:send_named_float('CDC (% RH)', hum)
-    if hum then
-      logger:write('CDC', 'Humidity', 'f', '-', '-', hum)
-      gcs:send_text(1, "CDC: hum logged")
-    else
-      gcs:send_text(1, "CDC: failed to read cap data")
-    end
- ]]
   else
     return update()
   end
