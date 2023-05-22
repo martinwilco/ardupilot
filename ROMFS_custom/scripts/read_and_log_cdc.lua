@@ -32,17 +32,31 @@ end
 
 -- parameter for p14 humidity offset, default -106
 local PARAM_TABLE_KEY = 72
-assert(param:add_table(PARAM_TABLE_KEY, "P14_", 30), 'could not add param table')
-assert(param:add_param(PARAM_TABLE_KEY, 1, 'OFFSET', -106), 'could not add param1')
+assert(param:add_table(PARAM_TABLE_KEY, "CDC_", 30), 'could not add param table')
+assert(param:add_param(PARAM_TABLE_KEY, 1, 'OFFSET', -106), 'could not add param1')     --default offset to HMP (-106 % RH)
+assert(param:add_param(PARAM_TABLE_KEY, 2, 'OFFSET_RANGE', 20), 'could not add param1') --default offset range for RC knob (+-20 % RH)
 
 -- get capacitance and convert it to humidity
 local function getcap(addr)
   local cap = data(addr)
   if cap then
-    local P14_OFFSET = Parameter()
-    P14_OFFSET:init('P14_OFFSET')
-    local p14_offset = P14_OFFSET:get()
-    return cap / 42279.1 - 151.5 + p14_offset
+    local CDC_OFFSET = Parameter()
+    CDC_OFFSET:init('CDC_OFFSET')
+    local scripting_rc_1 = rc:find_channel_for_option(300)
+    if scripting_rc_1 then
+      -- RC input +-1 PWM knob offset -> +- 20 % RH offset
+      local CDC_OFFSET_RANGE = Parameter()
+      CDC_OFFSET_RANGE:init('CDC_OFFSET_RANGE')
+      local cdc_offset_rc = -106 + CDC_OFFSET_RANGE:get() * scripting_rc_1:norm_input()
+      CDC_OFFSET:set(cdc_offset_rc)
+      gcs:send_named_float('CDC_OFFSET', cdc_offset_rc)
+      return cap / 42279.1 - 151.5, cap / 42279.1 - 151.5 + cdc_offset_rc
+    else
+      -- Mission Planner parameter list P14 offset
+      local cdc_offset_mp = CDC_OFFSET:get()
+      gcs:send_named_float('CDC_OFFSET', cdc_offset_mp)
+      return cap / 42279.1 - 151.5, cap / 42279.1 - 151.5 + cdc_offset_mp
+    end
   end
 end
 
@@ -100,12 +114,13 @@ function update()
 
   -- check if capacitance and voltage/temperature conversion is finished, read and log data
   if RDY == 0 then
-    local hum = getcap(CDC_CAP_DATA)
+    local hum_raw, hum = getcap(CDC_CAP_DATA)
     local temp = getvt(CDC_VT_DATA)
-    gcs:send_named_float('CDC (°C)', temp)
     gcs:send_named_float('CDC (% RH)', hum)
-    if temp and hum then
-      logger:write('CDC', 'Humidity,Temperature', 'ff', '-O', '--', hum, temp)
+    gcs:send_named_float('CDC RAW', hum_raw)
+    gcs:send_named_float('CDC (°C)', temp)
+    if temp and hum and hum_raw then
+      logger:write('CDC', 'Humidity,Humidity raw,Temperature', 'fff', '--O', '---', hum, hum_raw, temp)
     else
       gcs:send_text(1, "CDC: failed to read data")
     end
