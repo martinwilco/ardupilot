@@ -20,43 +20,38 @@ local CDC_CAP_DAC_B = 0x0C;
 local sensor = i2c:get_device(0, CDC_I2C_ADDR)
 sensor:set_retries(10)
 
--- reads three consecutive bytes from a given location
+-- read three consecutive bytes from a given location
 local function data(addr)
   local data_h = sensor:read_registers(addr + 0)
   local data_m = sensor:read_registers(addr + 1)
   local data_l = sensor:read_registers(addr + 2)
   if data_h and data_m and data_l then
-    return data_h << 16 | data_m << 8 | data_l
+    return data_h << 16 | data_m << 8 | data_l --cdc_rapid_val
   end
 end
 
--- parameter for p14 humidity offset, default -106
+-- parameter for P14 humidity offset
 local PARAM_TABLE_KEY = 72
-assert(param:add_table(PARAM_TABLE_KEY, "CDC_", 30), 'could not add param table')
-assert(param:add_param(PARAM_TABLE_KEY, 1, 'OFFSET', -106), 'could not add param1')     --default offset to HMP (-106 % RH)
-assert(param:add_param(PARAM_TABLE_KEY, 2, 'OFFSET_RANGE', 20), 'could not add param1') --default offset range for RC knob (+-20 % RH)
+assert(param:add_table(PARAM_TABLE_KEY, "P14_", 30), 'could not add param table')
+assert(param:add_param(PARAM_TABLE_KEY, 1, 'OFFSET2NOM', -106), 'could not add param1') --default offset to RH_P14_raw_nom (-106 % RH)
+P14_OFFSET = Parameter()
+P14_OFFSET:init('P14_OFFSET2NOM')
 
 -- get capacitance and convert it to humidity
+-- RH_P14_raw_nom = cdc_rapid_val / 42279.1 - 198.4 + 576.9 - 560 + 30 = cdc_rapid_val / 42279.1 - 151.5
+-- RH_P14_raw_min = cdc_rapid_val / 42279.1 - 198.4 + 461.5 - 720 + 30 = cdc_rapid_val / 42279.1 - 426.9
+-- RH_P14_raw_max = cdc_rapid_val / 42279.1 - 198.4 + 692.3 - 400 + 30 = cdc_rapid_val / 42279.1 + 123.9
+-- scale factor at 1% R1, R2 resistance and 100pm/deg, i.e. 1.5% deviation
+-- RH_P14_raw_nomscale = cdc_rapid_val / 42279.1 - Offset
+-- RH_P14_raw_minscale = cdc_rapid_val / 34695.5 - Offset
+-- RH_P14_raw_maxscale = cdc_rapid_val / 49836.4 - Offset
 local function getcap(addr)
-  local cap = data(addr)
-  if cap then
-    local CDC_OFFSET = Parameter()
-    CDC_OFFSET:init('CDC_OFFSET')
-    local scripting_rc_1 = rc:find_channel_for_option(300)
-    if scripting_rc_1 then
-      -- RC input +-1 PWM knob offset -> +- 20 % RH offset
-      local CDC_OFFSET_RANGE = Parameter()
-      CDC_OFFSET_RANGE:init('CDC_OFFSET_RANGE')
-      local cdc_offset_rc = -106 + CDC_OFFSET_RANGE:get() * scripting_rc_1:norm_input()
-      CDC_OFFSET:set(cdc_offset_rc)
-      gcs:send_named_float('CDC_OFFSET', cdc_offset_rc)
-      return cap / 42279.1 - 151.5, cap / 42279.1 - 151.5 + cdc_offset_rc
-    else
-      -- Mission Planner parameter list P14 offset
-      local cdc_offset_mp = CDC_OFFSET:get()
-      gcs:send_named_float('CDC_OFFSET', cdc_offset_mp)
-      return cap / 42279.1 - 151.5, cap / 42279.1 - 151.5 + cdc_offset_mp
-    end
+  local cdc_rapid_val = data(addr)
+  if cdc_rapid_val then
+    -- parameter P14 offset to nominal
+    local p14_offset2nom = P14_OFFSET:get()
+    gcs:send_named_float('P14_OFFSET', p14_offset2nom)
+    return cdc_rapid_val / 42279.1 - 151.5 + p14_offset2nom, cdc_rapid_val
   end
 end
 
@@ -68,16 +63,12 @@ local function getvt(addr)
   end
 end
 
--- set TSYS01 Source ID parameter (battery number)
-param:set('TEMP1_SRC', 3)
-param:set('TEMP1_SRC_ID', 1)
-
 -- initialize CDC
-sensor:write_register(CDC_CAP_SETUP, 0x80) --bit 7 CAPEN = 1
-sensor:write_register(CDC_VT_SETUP, 0x80)  --bit 7 VTEN = 1
-sensor:write_register(CDC_EXC_SETUP, 0x1B) --bit 0 EXCLVL0 = 1, bit 1 EXCLVL0 = 1, bit 3 EXCA = 1, 4 EXCB = 1
-sensor:write_register(CDC_CONFIG, 0x01)    --bit 0 MD0 = 1
-sensor:write_register(CDC_CAP_DAC_A, 200)
+sensor:write_register(CDC_CAP_SETUP, 0x80) -- bit 7 CAPEN = 1
+sensor:write_register(CDC_VT_SETUP, 0x80)  -- bit 7 VTEN = 1
+sensor:write_register(CDC_EXC_SETUP, 0x1B) -- bit 0 EXCLVL0 = 1, bit 1 EXCLVL0 = 1, bit 3 EXCA = 1, 4 EXCB = 1
+sensor:write_register(CDC_CONFIG, 0x01)    -- bit 0 MD0 = 1
+sensor:write_register(CDC_CAP_DAC_A, 200)  -- amp-factor
 sensor:write_register(CDC_CAP_DAC_B, 0x00)
 
 function update()
@@ -93,7 +84,7 @@ function update()
     return update, 10000
   end
 
-  -- show TSYS01 temperature on Mission Planner Quicktab
+  -- show TSYS01 temperature on Mission Planner Quicktab, works only if parameter TEMP1_SRC is set to 3 and TEMP1_SRC_ID to 1
   local tsys01_temp = battery:get_temperature(0)
   if tsys01_temp then
     gcs:send_named_float('TSYS (°C)', tsys01_temp)
@@ -114,20 +105,20 @@ function update()
 
   -- check if capacitance and voltage/temperature conversion is finished, read and log data
   if RDY == 0 then
-    local hum_raw, hum = getcap(CDC_CAP_DATA)
+    local p14_raw, cdc_raw = getcap(CDC_CAP_DATA)
     local temp = getvt(CDC_VT_DATA)
-    gcs:send_named_float('CDC (% RH)', hum)
-    gcs:send_named_float('CDC RAW', hum_raw)
+    gcs:send_named_float('P14 (% RH)', p14_raw)
+    gcs:send_named_float('CDC Raw', cdc_raw)
     gcs:send_named_float('CDC (°C)', temp)
-    if temp and hum and hum_raw then
-      logger:write('CDC', 'Humidity,Humidity raw,Temperature', 'fff', '--O', '---', hum, hum_raw, temp)
+    if p14_raw and cdc_raw and temp then
+      logger:write('MMT', 'P14 Raw,CDC Raw,CDC Temp', 'fff', '--O', '---', p14_raw, cdc_raw, temp)
     else
       gcs:send_text(1, "CDC: failed to read data")
     end
   else
     return update()
   end
-
+  -- conversion time set to 11 ms, output data rate 90.9 Hz -> loop every 10 ms
   return update, 10
 end
 
