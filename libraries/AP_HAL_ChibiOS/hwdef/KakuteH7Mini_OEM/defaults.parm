@@ -22,4 +22,4 @@ TEMP1_SRC_ID 1
 TEMP_LOG 1
 
 # Logging when disarmed
-LOG_DISARMED 1
+# LOG_DISARMED 1

@@ -111,7 +111,7 @@ function update()
     gcs:send_named_float('CDC Raw', cdc_raw)
     gcs:send_named_float('CDC (°C)', temp)
     if p14_raw and cdc_raw and temp then
-      logger:write('MMT', 'P14 Raw,CDC Raw,CDC Temp', 'fff', '--O', '---', p14_raw, cdc_raw, temp)
+      logger:write('MMT', 'P14_Raw,CDC_Raw,CDC_Temp', 'fff', '--O', '---', p14_raw, cdc_raw, temp)
     else
       gcs:send_text(1, "CDC: failed to read data")
     end
