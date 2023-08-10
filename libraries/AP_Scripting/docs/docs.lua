@@ -1327,6 +1327,13 @@ function MotorsMatrix:add_motor_raw(motor_num, roll_factor, pitch_factor, yaw_fa
 ---@return boolean
 function MotorsMatrix:init(expected_num_motors) end
 
+-- desc get index (starting at 0) of lost motor
+---@return integer
+function MotorsMatrix:get_lost_motor() end
+
+-- desc return true if we are in thrust boost due to possible lost motor
+---@return boolean
+function MotorsMatrix:get_thrust_boost() end
 
 -- desc
 ---@class quadplane
@@ -1780,6 +1787,11 @@ function vehicle:get_wp_distance_m() end
 ---@param throttle number
 ---@return boolean
 function vehicle:set_steering_and_throttle(steering, throttle) end
+
+-- desc
+---@return number|nil
+---@return number|nil
+function vehicle:get_steering_and_throttle() end
 
 -- desc
 ---@param rate_dps number
@@ -2609,6 +2621,23 @@ AC_AttitudeControl = {}
 ---@return number -- pitch slew rate
 ---@return number -- yaw slew rate
 function AC_AttitudeControl:get_rpy_srate() end
+
+-- desc
+---@class AR_AttitudeControl
+AR_AttitudeControl = {}
+
+-- return attitude controller slew rates for rovers
+---@return number -- steering slew rate
+---@return number -- spees slew rate
+function AR_AttitudeControl:get_srate() end
+
+-- desc
+---@class AR_PosControl
+AR_PosControl = {}
+
+-- return position controller slew rates for rovers
+---@return number -- velocity slew rate
+function AR_PosControl:get_srate() end
 
 -- desc
 ---@class follow
