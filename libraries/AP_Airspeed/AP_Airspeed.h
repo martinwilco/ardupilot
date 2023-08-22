@@ -182,6 +182,7 @@ public:
         TYPE_MSP=14,
         TYPE_I2C_ASP5033=15,
         TYPE_SITL=100,
+        TYPE_I2C_SDP3XMULT=16
     };
 
     // get current primary sensor

@@ -49,6 +49,7 @@
 #include "AP_Airspeed_NMEA.h"
 #include "AP_Airspeed_MSP.h"
 #include "AP_Airspeed_SITL.h"
+#include "AP_Airspeed_SDP3Xmult.h"
 extern const AP_HAL::HAL &hal;
 
 #include <AP_Vehicle/AP_FixedWing.h>
@@ -348,6 +349,9 @@ void AP_Airspeed::allocate()
         switch ((enum airspeed_type)param[i].type.get()) {
         case TYPE_NONE:
             // nothing to do
+            break;
+        case TYPE_I2C_SDP3XMULT:
+            sensor[i] = new AP_Airspeed_SDP3Xmult(*this, i);
             break;
         case TYPE_I2C_MS4525:
 #if AP_AIRSPEED_MS4525_ENABLED
