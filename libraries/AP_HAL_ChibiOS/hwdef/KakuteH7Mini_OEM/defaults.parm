@@ -3,6 +3,14 @@ include ../KakuteH7Mini/defaults.parm
 # Scripting enabled at startup
 SCR_ENABLE 1
 
+# Battery settings
+BATT_CAPACITY 7000
+BATT_FS_CRT_ACT 1
+BATT_FS_LOW_ACT 2
+BATT_ARM_VOLT 15.8
+BATT_CRT_VOLT 13.6
+BATT_LOW_VOLT 14.4
+
 # HMP sensor serial port 4 for logging
 SERIAL4_PROTOCOL 28
 SERIAL4_BAUD 19
@@ -23,3 +31,13 @@ TEMP_LOG 1
 
 # Logging when disarmed
 # LOG_DISARMED 1
+
+# Close Logfile when disarmed
+# LOG_FILE_DSRMROT 1
+
+# Enable airspeed sensors
+ARSPD_ENABLE 1
+ARSPD_BUS 0
+ARSPD2_BUS 0
+ARSPD_TYPE 6
+ARSPD2_TYPE 16
