@@ -1,0 +1,26 @@
+include ../KakuteH7Mini/defaults.parm
+
+# Scripting enabled at startup
+SCR_ENABLE 1
+
+# Battery settings
+BATT_CAPACITY 7000
+BATT_FS_CRT_ACT 1
+BATT_FS_LOW_ACT 2
+BATT_ARM_VOLT 15.8
+BATT_CRT_VOLT 13.6
+BATT_LOW_VOLT 14.4
+MOT_BAT_VOLT_MAX 16.8
+MOT_BAT_VOLT_MIN 13.2
+
+# Auto-enable BLHeli pass-thru support for all multicopter motors
+SERVO_BLH_AUTO 1
+
+# Activate FPORT for RC
+SERIAL6_OPTIONS 7
+
+# Logging when disarmed
+# LOG_DISARMED 1
+
+# Close logfile when disarmed
+# LOG_FILE_DSRMROT 1
