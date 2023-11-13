@@ -161,14 +161,11 @@ local motor_des_pwm = MOTOR_PWM:get()                                           
 local new_motor_des_pwm = motor_des_pwm                                                            -- initialise new max motor output for gradual increase to preset motor output once at start
 local desired_pitch_angle = -PITCH_ANGLE:get()                                                     -- get desired pitch angle for descent
 local pitch_angle_offset = 1                                                                       -- pitch angle offset to determine, if desired pitch angle is reached before lowering motor power
-local pitch_angle_max = desired_pitch_angle - pitch_angle_offset                                   -- calculate max pitch angle
-local pitch_angle_min = desired_pitch_angle + pitch_angle_offset                                   -- caluclate min pitch angle
 local flare = desired_pitch_angle                                                                  -- initialise flare angle to desired pitch angle once at start
 local flare_frequency = 10                                                                         -- frequency for flare angle and max motor output increase
 local flare_duration = FLARE_TIME:get()                                                            -- get duration of flare in seconds
-local flare_interval_deg = math.abs(desired_pitch_angle) / flare_duration * flare_frequency / 1000 -- calculate interval flare angle
 local heading                                                                                      -- heading variable
-local hover_offset = HOVER_OFFS:get()                                                            -- get vertical hover velocity offset
+local hover_offset = HOVER_OFFS:get()                                                              -- get vertical hover velocity offset
 
 -- get vertical velocity in z
 local function get_vertical_vel()
@@ -220,10 +217,15 @@ local GUID_OPTIONS = Parameter()
 GUID_OPTIONS:init('GUID_OPTIONS')
 local guid_options = GUID_OPTIONS:get()
 
--- calculate interval of max motor pwm increase during flare
-local function mot_interval_pwm()
-    local interval_pwm = (mot_pwm_max_before - motor_des_pwm) / flare_duration * flare_frequency / 1000
-    return interval_pwm
+-- calculate intervals to increase motor pwm and pitch angle during flare
+local function calc_interval(param)
+    if param == 'pwm' then
+        local interval_pwm = (mot_pwm_max_before - motor_des_pwm) / flare_duration * flare_frequency / 1000 -- calculate interval motor pwm
+        return interval_pwm
+    elseif param == 'deg' then
+        local interval_deg = math.abs(desired_pitch_angle) / flare_duration * flare_frequency / 1000 -- calculate interval flare angle
+        return interval_deg
+    end
 end
 
 -- disable pilot yaw control in guided mode
@@ -261,7 +263,7 @@ function fast_descent()                                  -- fast descent manoeuv
                 stage = stage + 1
             else
                 vehicle:set_target_angle_and_climbrate(0, desired_pitch_angle, heading, 0, false, 0) -- set desied pitch angle and heading for descent
-                if not mot_pwm_max_set and math.deg(ahrs:get_pitch()) >= pitch_angle_max and math.deg(ahrs:get_pitch()) <= pitch_angle_min then
+                if not mot_pwm_max_set and math.deg(ahrs:get_pitch()) >= (desired_pitch_angle - pitch_angle_offset) and math.deg(ahrs:get_pitch()) <= (desired_pitch_angle + pitch_angle_offset) then
                     MOT_PWM_MAX:set(motor_des_pwm)                                                   -- when desired pitch angle is reached, reduce maximum motor power to prevent drifting
                     mot_pwm_max_set = true
                 end
@@ -270,10 +272,9 @@ function fast_descent()                                  -- fast descent manoeuv
         return fast_descent, 2.5 -- 400Hz
     elseif stage == 2 then       -- third stage: flare to slow down descent and switch to loiter mode
         if math.deg(ahrs:get_pitch()) < 0 then
-            flare = flare +
-                flare_interval_deg                                         -- increase desired pitch angle gradually to 0 to flare in a smooth arc
+            flare = flare + calc_interval('deg')                                     -- increase desired pitch angle gradually to 0 to flare in a smooth arc
             if new_motor_des_pwm < mot_pwm_max_before then
-                new_motor_des_pwm = new_motor_des_pwm + mot_interval_pwm() -- increase maximum available motor power gradually
+                new_motor_des_pwm = new_motor_des_pwm + calc_interval('pwm')         -- increase maximum available motor power gradually
             elseif mot_pwm_max_before then
                 new_motor_des_pwm = mot_pwm_max_before
             end
@@ -320,9 +321,12 @@ function standby()                                                              
         heading_set = false
         stage = 0
         heading = 0
+        desired_pitch_angle = -PITCH_ANGLE:get()
         flare = desired_pitch_angle
-        motor_des_pwm = 1250
+        motor_des_pwm = MOTOR_PWM:get()
         new_motor_des_pwm = motor_des_pwm
+        hover_offset = HOVER_OFFS:get()
+        flare_duration = FLARE_TIME:get()
         deactivate_guided_pilot_yaw(false)
         reset = true
     end
