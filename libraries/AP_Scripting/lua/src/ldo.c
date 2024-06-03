@@ -142,6 +142,9 @@ int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
   lj.status = LUA_OK;
   lj.previous = L->errorJmp;  /* chain new error handler */
   L->errorJmp = &lj;
+#ifdef ARM_MATH_CM7
+    __asm__("vpush {s16-s31}");
+#endif
   LUAI_TRY(L, &lj,
 #ifdef ARM_MATH_CM7
     __asm__("vpush {s16-s31}");
