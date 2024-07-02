@@ -192,7 +192,7 @@ public:
         TYPE_I2C_ASP5033=15,
         TYPE_EXTERNAL=16,
         TYPE_SITL=100,
-        TYPE_I2C_SDP3XMULT=16
+        TYPE_I2C_SDP3XMULT=17
     };
 
     // get current primary sensor
