@@ -1,11 +1,12 @@
 --[[
     This script reads a P14 Rapid humidity sensor via CDC AD7745 on I²C,
     reading will be saved to data flash logs and streamed to gcs.
-]]
---
+    The logging rate is adjustable via parameter P14_LOG_RATE.
+    The humidity offset is adjustable via parameter P14_OFFSET2NOM.
+--]]
 
 -- CDC register names
-local CDC_I2C_ADDR = 72; --I²C address 0x48
+local CDC_I2C_ADDR = 0x48; --I²C address 72
 local CDC_STATUS = 0x00;
 local CDC_CAP_DATA = 0x01;
 local CDC_VT_DATA = 0x04;
@@ -26,16 +27,44 @@ local function data(addr)
   local data_m = sensor:read_registers(addr + 1)
   local data_l = sensor:read_registers(addr + 2)
   if data_h and data_m and data_l then
-    return data_h << 16 | data_m << 8 | data_l --cdc_rapid_val
+    return data_h << 16 | data_m << 8 | data_l -- cdc_rapid_val
   end
 end
 
--- parameter for P14 humidity offset
-local PARAM_TABLE_KEY = 72
-assert(param:add_table(PARAM_TABLE_KEY, "P14_", 30), 'could not add param table')
-assert(param:add_param(PARAM_TABLE_KEY, 1, 'OFFSET2NOM', -106), 'could not add param1') --default offset to RH_P14_raw_nom (-106 % RH)
-P14_OFFSET = Parameter()
-P14_OFFSET:init('P14_OFFSET2NOM')
+-- create parameter table
+local PARAM_TABLE_KEY = 73 -- parameter table key must be used by only one script on a particular flight controller, unique index value between 0 and 200
+local PARAM_TABLE_PREFIX = 'P14_'
+assert(param:add_table(PARAM_TABLE_KEY, PARAM_TABLE_PREFIX, 2),
+  string.format('Could not add param table %s', PARAM_TABLE_PREFIX))
+
+-- add a parameter and bind it to a variable
+local function bind_add_param(name, idx, default_value)
+  assert(param:add_param(PARAM_TABLE_KEY, idx, name, default_value), string.format('Could not add param %s', name))
+  return Parameter(PARAM_TABLE_PREFIX .. name)
+end
+
+--[[
+  // @Param: P14_OFFSET
+  // @DisplayName: P14 humidity offset
+  // @Description: Adjust offset to RH_P14_raw_nom
+  // @Units: %
+  // @User: Standard
+--]]
+P14_OFFSET2NOM = bind_add_param('OFFSET2NOM', 1, -106) -- offset to RH_P14_raw_nom [% RH]
+
+--[[
+  // @Param: P14_LOG_RATE
+  // @DisplayName: P14 logging rate
+  // @Description: Adjust P14 logging rate in ms
+  // @Units: ms
+  // @User: Standard
+--]]
+P14_LOG_RATE = bind_add_param('LOG_RATE', 2, 10) -- logging rate [ms], CDC conversion time set to 11 ms, output data rate 90.9 Hz -> loop every 10 ms
+
+local OFFSET = Parameter()
+OFFSET:init('P14_OFFSET2NOM')
+local LOG_RATE = Parameter()
+LOG_RATE:init('P14_LOG_RATE')
 
 -- get capacitance and convert it to humidity
 -- RH_P14_raw_nom = cdc_rapid_val / 42279.1 - 198.4 + 576.9 - 560 + 30 = cdc_rapid_val / 42279.1 - 151.5
@@ -49,7 +78,7 @@ local function getcap(addr)
   local cdc_rapid_val = data(addr)
   if cdc_rapid_val then
     -- parameter P14 offset to nominal
-    local p14_offset2nom = P14_OFFSET:get()
+    local p14_offset2nom = OFFSET:get()
     gcs:send_named_float('P14_OFFSET', p14_offset2nom)
     return cdc_rapid_val / 42279.1 - 151.5 + p14_offset2nom, cdc_rapid_val
   end
@@ -118,8 +147,7 @@ function update()
   else
     return update()
   end
-  -- conversion time set to 11 ms, output data rate 90.9 Hz -> loop every 10 ms
-  return update, 10
+  return update, LOG_RATE:get()
 end
 
 return update()
