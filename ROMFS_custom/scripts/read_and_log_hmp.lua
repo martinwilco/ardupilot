@@ -5,7 +5,7 @@
 --]]
 
 -- create parameter table
-local PARAM_TABLE_KEY = 73 -- parameter table key must be used by only one script on a particular flight controller, unique index value between 0 and 200
+local PARAM_TABLE_KEY = 74 -- parameter table key must be used by only one script on a particular flight controller, unique index value between 0 and 200
 local PARAM_TABLE_PREFIX = 'HMP_'
 assert(param:add_table(PARAM_TABLE_KEY, PARAM_TABLE_PREFIX, 1),
   string.format('Could not add param table %s', PARAM_TABLE_PREFIX))
