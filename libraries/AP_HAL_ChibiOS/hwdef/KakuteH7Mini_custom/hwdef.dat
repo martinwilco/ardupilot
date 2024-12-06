@@ -152,16 +152,9 @@ IMU Invensense SPI:mpu6000 ROTATION_YAW_180
 # one BARO
 BARO BMP280 I2C:0:0x76
 
-# setup for OSD
-define OSD_ENABLED 1
-define HAL_OSD_TYPE_DEFAULT 1
-ROMFS_WILDCARD libraries/AP_OSD/fonts/font*.bin
-
 define STM32_PWM_USE_ADVANCED TRUE
 
 define DEFAULT_NTF_LED_TYPES 257
-
-define AP_SCRIPTING_ENABLED 1
 
 # SPI3 for emulated SDCard
 PA15 SDCARD_CS CS
@@ -175,6 +168,3 @@ SPIDEV sdcard   SPI3 DEVID1 SDCARD_CS   MODE0 400*KHZ 25*MHZ
 # enabled filesystem and directories, mandatory to enable scripting
 define HAL_OS_FATFS_IO 1
 define HAL_BOARD_LOG_DIRECTORY "/APM/LOGS"
-
-# temperature sensor support
-define AP_TEMPERATURE_SENSOR_ENABLED 1
