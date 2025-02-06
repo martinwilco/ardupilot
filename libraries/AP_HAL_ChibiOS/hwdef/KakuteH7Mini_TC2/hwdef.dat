@@ -1,0 +1,16 @@
+# Hardware definition for IFF Trainingscopter 2 with HMP, TSYS01, P14 and SDP33
+# Compile firmware: ./waf configure --board KakuteH7Mini_TC2
+# Bootloader excluded in /KakuteH7Mini_custom/hwdef.dat (define AP_BOOTLOADER_FLASHING_ENABLED 0)
+# If building bootloader is needed, set (define AP_BOOTLOADER_FLASHING_ENABLED 1) and add bootloader
+# files to Tools/bootloaders (KakuteH7Mini_TC2_bl.bin and KakuteH7Mini_TC2_bl.hex)
+
+include ../KakuteH7Mini_custom/hwdef.dat
+
+undef AP_AIRSPEED_SDP3X_ENABLED
+undef AP_AIRSPEED_ENABLED
+undef AP_TEMPERATURE_SENSOR_ENABLED
+undef AP_TEMPERATURE_SENSOR_TSYS01_ENABLED
+define AP_AIRSPEED_SDP3X_ENABLED 1
+define AP_AIRSPEED_ENABLED 1
+define AP_TEMPERATURE_SENSOR_ENABLED 1
+define AP_TEMPERATURE_SENSOR_TSYS01_ENABLED 1

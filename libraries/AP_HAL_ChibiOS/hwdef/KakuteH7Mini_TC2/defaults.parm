@@ -1,0 +1,20 @@
+@include ../KakuteH7Mini_custom/defaults.parm
+
+# enable TSYS01 with logging
+TEMP1_TYPE 1
+TEMP1_BUS 0
+TEMP1_ADDR 119
+TEMP1_SRC 3
+TEMP1_SRC_ID 1
+TEMP_LOG 1
+
+# HMP sensor serial port 4 for logging
+SERIAL4_PROTOCOL 28
+SERIAL4_BAUD 19
+
+# enable airspeed sensors
+ARSPD_ENABLE 1
+ARSPD_BUS 0
+ARSPD2_BUS 0
+ARSPD_TYPE 6
+ARSPD2_TYPE 16

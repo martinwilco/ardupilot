@@ -1,43 +1,39 @@
-include ../KakuteH7Mini/defaults.parm
+@include ../KakuteH7Mini/defaults.parm
+
+# frame class and type
+FRAME_CLASS 1
+FRAME_TYPE 1
+
+# battery settings
+BATT_ARM_VOLT 14.7
+BATT_CAPACITY 7000
+BATT_LOW_VOLT 14.4
+BATT_FS_LOW_ACT 2
+BATT_CRT_VOLT 13.6
+BATT_FS_CRT_ACT 1
+
+# activate F.Port for RC
+SERIAL6_OPTIONS 7
+RSSI_TYPE 3
+
+# motor settings
+MOT_BAT_VOLT_MAX 16.8
+MOT_BAT_VOLT_MIN 13.2
+MOT_PWM_TYPE 6
+
+# auto-enable ESC pass-thru support for all multicopter motors
+SERVO_BLH_AUTO 1
+SERVO_DSHOT_ESC 3
+SERVO_BLH_BDMASK 15
+SERVO_DSHOT_RATE 3
+NTF_LED_TYPES 2305
+NTF_BUZZ_TYPES 3
+
+# log when disarmed
+# LOG_DISARMED 1
+
+# close logfile when disarmed
+# LOG_FILE_DSRMROT 1
 
 # scripting enabled at startup
 SCR_ENABLE 1
-
-# battery settings
-BATT_CAPACITY 7000
-BATT_FS_CRT_ACT 1
-BATT_FS_LOW_ACT 2
-BATT_ARM_VOLT 15.4
-BATT_CRT_VOLT 13.6
-BATT_LOW_VOLT 14.4
-
-# HMP sensor serial port 4 for logging
-SERIAL4_PROTOCOL 28
-SERIAL4_BAUD 19
-
-# auto-enable BLHeli pass-thru support for all multicopter motors
-SERVO_BLH_AUTO 1
-
-# activate FPORT for RC
-SERIAL6_OPTIONS 7
-
-# enable TSYS01 with logging
-TEMP1_TYPE 1
-TEMP1_BUS 0
-TEMP1_ADDR 119
-TEMP1_SRC 3
-TEMP1_SRC_ID 1
-TEMP_LOG 1
-
-# Logging when disarmed
-# LOG_DISARMED 1
-
-# Close Logfile when disarmed
-# LOG_FILE_DSRMROT 1
-
-# enable airspeed sensors
-ARSPD_ENABLE 1
-ARSPD_BUS 0
-ARSPD2_BUS 0
-ARSPD_TYPE 6
-ARSPD2_TYPE 16
