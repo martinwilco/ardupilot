@@ -1,5 +1,5 @@
 --[[
-    This script reads a HMP humidity sensor via UART,
+    This script reads a HMP 110 humidity sensor via UART,
     reading will be saved to data flash logs and streamed to gcs.
     The logging rate is adjustable via parameter HMP_LOG_RATE.
 --]]
@@ -7,11 +7,10 @@
 -- create parameter table
 local PARAM_TABLE_KEY = 74 -- parameter table key must be used by only one script on a particular flight controller, unique index value between 0 and 200
 local PARAM_TABLE_PREFIX = 'HMP_'
-assert(param:add_table(PARAM_TABLE_KEY, PARAM_TABLE_PREFIX, 1),
-  string.format('Could not add param table %s', PARAM_TABLE_PREFIX))
+assert(param:add_table(PARAM_TABLE_KEY, PARAM_TABLE_PREFIX, 1), string.format('Could not add param table %s', PARAM_TABLE_PREFIX))
 
 -- add a parameter and bind it to a variable
-local function bind_add_param(name, idx, default_value)
+function bind_add_param(name, idx, default_value)
   assert(param:add_param(PARAM_TABLE_KEY, idx, name, default_value), string.format('Could not add param %s', name))
   return Parameter(PARAM_TABLE_PREFIX .. name)
 end
@@ -19,11 +18,11 @@ end
 --[[
   // @Param: HMP_LOG_RATE
   // @DisplayName: HMP logging rate
-  // @Description: Adjust HMP logging rate in ms
-  // @Units: ms
+  // @Description: Adjust HMP logging rate in Hz
+  // @Units: Hz
   // @User: Standard
 --]]
-HMP_LOG_RATE = bind_add_param('LOG_RATE', 1, 300) -- logging rate [ms]
+local HMP_LOG_RATE = bind_add_param('LOG_RATE', 1, 10) -- logging rate [Hz]
 
 local LOG_RATE = Parameter()
 LOG_RATE:init('HMP_LOG_RATE')
@@ -72,7 +71,7 @@ function spit()
       n_bytes = n_bytes - 1
     end
   end
-  return spit, LOG_RATE:get()
+  return spit, (1000/LOG_RATE:get())
 end
 
 return spit()
