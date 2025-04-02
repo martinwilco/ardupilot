@@ -1532,6 +1532,7 @@ class TestSuite(ABC):
                  num_aux_imus=0,
                  dronecan_tests=False,
                  generate_junit=False,
+                 enable_fgview=False,
                  build_opts={}):
 
         self.start_time = time.time()
@@ -1598,6 +1599,7 @@ class TestSuite(ABC):
         self.last_heartbeat_time_wc_s = 0
         self.in_drain_mav = False
         self.tlog = None
+        self.enable_fgview = enable_fgview
 
         self.rc_thread = None
         self.rc_thread_should_quit = False
@@ -8497,6 +8499,7 @@ Also, ignores heartbeats not from our target system'''
             "valgrind": self.valgrind,
             "callgrind": self.callgrind,
             "wipe": True,
+            "enable_fgview": self.enable_fgview,
         }
         start_sitl_args.update(**sitl_args)
         if ("defaults_filepath" not in start_sitl_args or
