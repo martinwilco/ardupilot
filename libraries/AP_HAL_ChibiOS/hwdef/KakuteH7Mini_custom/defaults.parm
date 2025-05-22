@@ -9,7 +9,7 @@ BATT_ARM_VOLT 14.7
 BATT_CAPACITY 7000
 BATT_LOW_VOLT 14.4
 BATT_FS_LOW_ACT 2
-BATT_CRT_VOLT 13.6
+BATT_CRT_VOLT 14
 BATT_FS_CRT_ACT 1
 
 # activate F.Port for RC
@@ -33,7 +33,7 @@ NTF_BUZZ_TYPES 3
 # LOG_DISARMED 1
 
 # close logfile when disarmed
-# LOG_FILE_DSRMROT 1
+LOG_FILE_DSRMROT 1
 
 # scripting enabled at startup
 SCR_ENABLE 1
