@@ -32,6 +32,13 @@ void ModeQLoiter::update()
 // run quadplane loiter controller
 void ModeQLoiter::run()
 {
+    if (quadplane.assist.check_VTOL_recovery()) {
+        // use QHover to recover from extreme attitudes, this allows
+        // for the fixed wing controller to handle the recovery
+        plane.mode_qhover.run();
+        return;
+    }
+
     const uint32_t now = AP_HAL::millis();
 
 #if AC_PRECLAND_ENABLED
@@ -48,7 +55,7 @@ void ModeQLoiter::run()
         // we have an active landing target override
         Vector2f rel_origin;
         if (plane.next_WP_loc.get_vector_xy_from_origin_NE(rel_origin)) {
-            quadplane.pos_control->set_pos_target_xy_cm(rel_origin.x, rel_origin.y);
+            quadplane.pos_control->set_pos_desired_xy_cm(rel_origin);
             last_target_loc_set_ms = 0;
         }
     }
@@ -162,6 +169,9 @@ void ModeQLoiter::run()
     // Stabilize with fixed wing surfaces
     plane.stabilize_roll();
     plane.stabilize_pitch();
+
+    // Center rudder
+    output_rudder_and_steering(0.0);
 }
 
 #endif
