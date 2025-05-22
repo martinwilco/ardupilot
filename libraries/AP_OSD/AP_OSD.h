@@ -349,16 +349,6 @@ private:
     void draw_rc_lq(uint8_t x, uint8_t y);
 #endif
 
-#if AP_OSD_EXTENDED_LNK_STATS
-    // Extended link stats data panels
-    bool is_btfl_fonts();    
-    void draw_rc_tx_power(uint8_t x, uint8_t y);
-    void draw_rc_rssi_dbm(uint8_t x, uint8_t y);
-    void draw_rc_snr(uint8_t x, uint8_t y);
-    void draw_rc_active_antenna(uint8_t x, uint8_t y);    
-    void draw_rc_lq(uint8_t x, uint8_t y);
-#endif
-
     struct {
         bool load_attempted;
         const char *str;

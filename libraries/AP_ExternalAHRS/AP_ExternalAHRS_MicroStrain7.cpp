@@ -357,36 +357,6 @@ bool AP_ExternalAHRS_MicroStrain7::filter_healthy() const
     return filter_healthy;
 }
 
-bool AP_ExternalAHRS_MicroStrain7::times_healthy() const
-{
-    uint32_t now = AP_HAL::millis();
-
-    // Expect the following rates:
-    // * Navigation Filter: 25Hz = 40mS
-    // * GPS: 2Hz = 500mS
-    // * IMU: 25Hz = 40mS
-
-    // Allow for some slight variance of 10%
-    constexpr float RateFoS = 1.1;
-
-    constexpr uint32_t expected_filter_time_delta_ms = 40;
-    constexpr uint32_t expected_gps_time_delta_ms = 500;
-    constexpr uint32_t expected_imu_time_delta_ms = 40;
-
-    const bool times_healthy = (now - last_imu_pkt < expected_imu_time_delta_ms * RateFoS && \
-                                now - last_gps_pkt < expected_gps_time_delta_ms * RateFoS && \
-                                now - last_filter_pkt < expected_filter_time_delta_ms * RateFoS);
-
-    return times_healthy;
-}
-
-bool AP_ExternalAHRS_MicroStrain7::filter_healthy() const
-{
-    const auto filter_state = static_cast<FilterState>(filter_status.state);
-    const bool filter_healthy = filter_state_healthy(filter_state);
-    return filter_healthy;
-}
-
 bool AP_ExternalAHRS_MicroStrain7::filter_state_healthy(FilterState state)
 {
     switch (state) {
