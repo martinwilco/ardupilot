@@ -1,0 +1,39 @@
+@include ../KakuteH7Mini/defaults.parm
+
+# frame class and type
+FRAME_CLASS 1
+FRAME_TYPE 1
+
+# battery settings
+BATT_ARM_VOLT 14.7
+BATT_CAPACITY 7000
+BATT_LOW_VOLT 14.4
+BATT_FS_LOW_ACT 2
+BATT_CRT_VOLT 14
+BATT_FS_CRT_ACT 1
+
+# activate F.Port for RC
+SERIAL6_OPTIONS 7
+RSSI_TYPE 3
+
+# motor settings
+MOT_BAT_VOLT_MAX 16.8
+MOT_BAT_VOLT_MIN 13.2
+MOT_PWM_TYPE 6
+
+# auto-enable ESC pass-thru support for all multicopter motors
+SERVO_BLH_AUTO 1
+SERVO_DSHOT_ESC 3
+SERVO_BLH_BDMASK 15
+SERVO_DSHOT_RATE 3
+NTF_LED_TYPES 2305
+NTF_BUZZ_TYPES 3
+
+# log when disarmed
+# LOG_DISARMED 1
+
+# close logfile when disarmed
+LOG_FILE_DSRMROT 1
+
+# scripting enabled at startup
+SCR_ENABLE 1
