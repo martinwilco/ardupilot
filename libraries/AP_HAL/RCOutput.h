@@ -416,9 +416,6 @@ public:
     // suitably long LED output period to support high LED counts
     static constexpr uint32_t LED_OUTPUT_PERIOD_US = 10000;
 
-    // suitably long LED output period to support high LED counts
-    static constexpr uint32_t LED_OUTPUT_PERIOD_US = 10000;
-
 protected:
 
     // helper functions for implementation of get_output_mode_banner

@@ -235,6 +235,7 @@ void ModeCircle::update_circling()
     target.accel.rotate(target.yaw_rad);
 
     g2.pos_control.set_pos_vel_accel_target(target.pos, target.vel, target.accel);
+
 }
 
 // return desired heading (in degrees) and cross track error (in meters) for reporting to ground station (NAV_CONTROLLER_OUTPUT message)

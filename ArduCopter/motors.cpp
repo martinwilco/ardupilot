@@ -192,6 +192,7 @@ void Copter::motors_output()
 
     // push all channels
     srv.push();
+    };
 }
 
 // check for pilot stick input to trigger lost vehicle alarm

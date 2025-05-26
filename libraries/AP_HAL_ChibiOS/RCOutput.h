@@ -471,17 +471,6 @@ private:
 
 #if HAL_SERIAL_ESC_COMM_ENABLED
     /*
-      timer thread for use by led events
-     */
-    thread_t *led_thread_ctx;
-
-    /*
-      mutex to control LED thread creation
-     */
-    HAL_Semaphore led_thread_sem;
-    bool led_thread_created;
-
-    /*
       structure for IRQ handler for soft-serial input
      */
     static struct irq_state {

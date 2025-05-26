@@ -1459,27 +1459,6 @@ void RCOutput::led_timer_tick(rcout_timer_t cycle_start_us, rcout_timer_t timeou
     }
 }
 
-/*
-  periodic timer called from led thread. This is used for LED output
- */
-void RCOutput::led_timer_tick(uint64_t time_out_us)
-{
-    if (serial_group) {
-        return;
-    }
-
-    // if we have enough time left send out LED data
-    if (serial_led_pending) {
-        serial_led_pending = false;
-        for (auto &group : pwm_group_list) {
-            serial_led_pending |= !serial_led_send(group);
-        }
-
-        // release locks on the groups that are pending in reverse order
-        dshot_collect_dma_locks(time_out_us, true);
-    }
-}
-
 // send dshot for all groups that support it
 void RCOutput::dshot_send_groups(rcout_timer_t cycle_start_us, rcout_timer_t timeout_period_us)
 {
@@ -2690,10 +2669,6 @@ bool RCOutput::serial_led_send(const uint16_t chan)
 
     if (led_thread_ctx == nullptr) {
         return false;
-    }
-
-    if (led_thread_ctx == nullptr) {
-        return;
     }
 
     uint8_t i;

@@ -173,14 +173,6 @@ void AR_PosControl::update(float dt)
         steering_limit_vec = AP::ahrs().body_to_earth2D(Vector2f{0, _reversed ? -1.0f : 1.0f});
     }
 
-    // calculate limit vector based on steering limits
-    Vector2f steering_limit_vec;
-    if (_atc.steering_limit_left()) {
-        steering_limit_vec = AP::ahrs().body_to_earth2D(Vector2f{0, _reversed ? 1.0f : -1.0f});
-    } else if (_atc.steering_limit_right()) {
-        steering_limit_vec = AP::ahrs().body_to_earth2D(Vector2f{0, _reversed ? -1.0f : 1.0f});
-    }
-
     // calculate desired acceleration
     _accel_target = _pid_vel.update_all(_vel_target, curr_vel_NED.xy(), dt, steering_limit_vec);
     if (_accel_desired_valid) {

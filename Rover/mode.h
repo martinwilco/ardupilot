@@ -262,12 +262,6 @@ public:
     float crosstrack_error() const override;
     float get_desired_lat_accel() const override;
 
-    // return heading (in degrees) and cross track error (in meters) for reporting to ground station (NAV_CONTROLLER_OUTPUT message)
-    float wp_bearing() const override;
-    float nav_bearing() const override;
-    float crosstrack_error() const override;
-    float get_desired_lat_accel() const override;
-
     // return distance (in meters) to destination
     float get_distance_to_destination() const override;
 
