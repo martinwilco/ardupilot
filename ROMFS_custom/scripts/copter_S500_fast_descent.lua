@@ -231,16 +231,16 @@ end
 -- disable pilot yaw control in guided mode
 local function deactivate_guided_pilot_yaw(bool)
     if bool == true then
-        GUID_OPTIONS:set(4)            -- set 4 to disable pilot yaw control
+        GUID_OPTIONS:set(4)            -- set to 4 to disable pilot yaw control
     elseif guid_options then
-        GUID_OPTIONS:set(guid_options) -- reset guided options to setting before fast descent
+        GUID_OPTIONS:set(guid_options) -- reset guided options to setting previous to fast descent
     elseif not guid_options then
         GUID_OPTIONS:set(0)            -- set guided options to default
     end
 end
 
 function fast_descent()                                  -- fast descent manoeuvre loop with state machine
-    if vehicle:get_mode() ~= copter_guided_mode_num then -- make sure, guided mode is engaged
+    if vehicle:get_mode() ~= copter_guided_mode_num then -- make sure guided mode is engaged
         gcs:send_text(6, 'Fast descent aborted')
         return standby, interval_ms
     end
@@ -262,7 +262,7 @@ function fast_descent()                                  -- fast descent manoeuv
             if get_altitude() <= (TARGET_ALT:get() + TARGET_OFFS:get()) then -- check current altitude during descent
                 stage = stage + 1
             else
-                vehicle:set_target_angle_and_climbrate(0, desired_pitch_angle, heading, 0, false, 0) -- set desied pitch angle and heading for descent
+                vehicle:set_target_angle_and_climbrate(0, desired_pitch_angle, heading, 0, false, 0) -- set desired pitch angle and heading for descent
                 if not mot_pwm_max_set and math.deg(ahrs:get_pitch()) >= (desired_pitch_angle - pitch_angle_offset) and math.deg(ahrs:get_pitch()) <= (desired_pitch_angle + pitch_angle_offset) then
                     MOT_PWM_MAX:set(motor_des_pwm)                                                   -- when desired pitch angle is reached, reduce maximum motor power to prevent drifting
                     mot_pwm_max_set = true
@@ -304,7 +304,7 @@ function fast_descent()                                  -- fast descent manoeuv
     return fast_descent, interval_ms
 end
 
-function standby()                                                                     -- waits for guided mode, checks whether fast descent manoeuvre is available
+function standby()                                                                     -- wait for guided mode, check whether fast descent manoeuvre is available
     if ENABLE:get() ~= 1 or not arming:is_armed() then return standby, interval_ms end -- do nothing if not enabled or not armed
     if vehicle:get_mode() == copter_guided_mode_num then                               -- guided mode check
         if get_altitude() < MIN_ALT:get() then                                         -- minimum altitude check for fast descent
