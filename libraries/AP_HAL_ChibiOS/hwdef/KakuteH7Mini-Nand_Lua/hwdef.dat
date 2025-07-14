@@ -9,4 +9,15 @@ SPIDEV bmi270    SPI4 DEVID1 MPU6000_CS    MODE3  1*MHZ  4*MHZ
 
 IMU BMI270 SPI:bmi270 ROTATION_PITCH_180_YAW_90
 
-define HAL_LOGGING_DATAFLASH_DRIVER AP_Logger_W25N01GV
+define HAL_LOGGING_DATAFLASH_DRIVER AP_Logger_W25NXX
+
+# Hardware definition for IFF Trainingscopter 2 with HMP, P14 and TSYS01
+# Compile firmware: ./waf configure --board KakuteH7Mini-Nand_Lua
+# Bootloader excluded in /KakuteH7Mini_custom/hwdef.dat (define AP_BOOTLOADER_FLASHING_ENABLED 0)
+# If building bootloader is needed, set (define AP_BOOTLOADER_FLASHING_ENABLED 1) and add bootloader
+# files to Tools/bootloaders (KakuteH7Mini-Nand_Lua_bl.bin and KakuteH7Mini-Nand_Lua_bl.hex)
+
+undef AP_TEMPERATURE_SENSOR_ENABLED
+undef AP_TEMPERATURE_SENSOR_TSYS01_ENABLED
+define AP_TEMPERATURE_SENSOR_ENABLED 1
+define AP_TEMPERATURE_SENSOR_TSYS01_ENABLED 1
